@@ -20,7 +20,7 @@ async function startQuiz(categoryId) {
   error.value = null
   
   try {
-    const res = await fetch(`http://localhost:5000/api/questions?category=${categoryId}`)
+    const res = await fetch(`/api/questions?category=${categoryId}`)
     const data = await res.json()
     questions.value = data.questions || []
     if(questions.value.length === 0) {
@@ -67,7 +67,7 @@ async function submitQuiz() {
     selected,
   }))
   try {
-    const res = await fetch('http://localhost:5000/api/submit', {
+    const res = await fetch('/api/submit', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ answers: answersArray }),

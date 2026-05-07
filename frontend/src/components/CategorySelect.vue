@@ -9,7 +9,7 @@ const error = ref(null)
 
 onMounted(async () => {
   try {
-    const res = await fetch('http://localhost:5000/api/categories')
+    const res = await fetch('/api/categories')
     const data = await res.json()
     categories.value = data.categories || []
   } catch (e) {
