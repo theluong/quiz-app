@@ -6,7 +6,8 @@
   "scripts": {
     "frontend": "npm run dev --prefix frontend",
     "backend": "node backend/index.js",
-    "dev": "concurrently \"npm run backend\" \"npm run frontend\""
+    "dev": "concurrently \"npm run backend\" \"npm run frontend\"",
+    "build": "cd frontend && npm install && npm run build"
   },
   "keywords": [],
   "author": "",
