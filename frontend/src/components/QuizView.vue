@@ -1,27 +1,37 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed } from 'vue'
+import CategorySelect from './CategorySelect.vue'
 import QuizQuestion from './QuizQuestion.vue'
 import QuizResult from './QuizResult.vue'
+
+const selectedCategory = ref(null)
 
 const questions = ref([])
 const currentIndex = ref(0)
 const answers = ref({})
 const submitted = ref(false)
 const submitResult = ref(null)
-const loading = ref(true)
+const loading = ref(false)
 const error = ref(null)
 
-onMounted(async () => {
+async function startQuiz(categoryId) {
+  selectedCategory.value = categoryId
+  loading.value = true
+  error.value = null
+  
   try {
-    const res = await fetch('http://localhost:5000/api/questions')
+    const res = await fetch(`http://localhost:5000/api/questions?category=${categoryId}`)
     const data = await res.json()
-    questions.value = data.questions
+    questions.value = data.questions || []
+    if(questions.value.length === 0) {
+      error.value = 'Chưa có câu hỏi nào trong chủ đề này.'
+    }
   } catch (e) {
     error.value = 'Không thể tải câu hỏi. Vui lòng thử lại.'
   } finally {
     loading.value = false
   }
-})
+}
 
 const currentQuestion = computed(() => questions.value[currentIndex.value])
 const total = computed(() => questions.value.length)
@@ -36,9 +46,6 @@ const wrongCount = computed(() => {
   if (!submitResult.value) return 0
   return submitResult.value.wrong
 })
-
-// Before submit: count selected for progress display
-const selectedCount = computed(() => Object.keys(answers.value).length)
 
 function selectAnswer(questionId, option) {
   answers.value = { ...answers.value, [questionId]: option }
@@ -56,7 +63,7 @@ function next() {
 
 async function submitQuiz() {
   const answersArray = Object.entries(answers.value).map(([id, selected]) => ({
-    id: Number(id),
+    id, // UUID string
     selected,
   }))
   try {
@@ -72,7 +79,9 @@ async function submitQuiz() {
   }
 }
 
-function restart() {
+function restartAndChooseNew() {
+  selectedCategory.value = null
+  questions.value = []
   currentIndex.value = 0
   answers.value = {}
   submitted.value = false
@@ -82,36 +91,42 @@ function restart() {
 
 <template>
   <div class="quiz-wrapper">
-    <!-- Loading -->
-    <div v-if="loading" class="quiz-card loading-state">
+    <!-- View 1: Category Selection -->
+    <CategorySelect 
+      v-if="!selectedCategory" 
+      @select="startQuiz" 
+    />
+
+    <!-- Wait loading state -->
+    <div v-else-if="loading" class="quiz-card loading-state">
       <div class="spinner"></div>
       <p>Đang tải câu hỏi...</p>
     </div>
 
-    <!-- Error -->
+    <!-- Error state -->
     <div v-else-if="error" class="quiz-card error-state">
       <div class="error-icon">⚠️</div>
       <p>{{ error }}</p>
-      <button class="btn-primary" @click="$router.go(0)">Thử lại</button>
+      <button class="btn-primary" @click="restartAndChooseNew">Quay lại</button>
     </div>
 
-    <!-- Result Screen -->
+    <!-- View 3: Result Screen -->
     <QuizResult
       v-else-if="submitted"
       :result="submitResult"
       :total="total"
-      @restart="restart"
+      @restart="restartAndChooseNew"
     />
 
-    <!-- Quiz Screen -->
-    <div v-else-if="questions.length" class="quiz-card">
+    <!-- View 2: Quiz Screen -->
+    <div v-else-if="questions.length > 0" class="quiz-card">
       <!-- Header -->
       <div class="quiz-header">
         <div class="quiz-title">
           <span class="quiz-icon">📝</span>
-          <span>Kiểm tra từ vựng Du lịch &amp; Công tác</span>
+          <span>Kiểm tra kiến thức</span>
         </div>
-        <button class="btn-close" @click="restart" title="Thoát">✕</button>
+        <button class="btn-close" @click="restartAndChooseNew" title="Thoát">✕</button>
       </div>
 
       <!-- Progress Bar -->
@@ -130,13 +145,7 @@ function restart() {
         </div>
         <div class="progress-stats">
           <span class="stat-current">{{ currentNumber }}/{{ total }}</span>
-          <span class="stat-wrong" v-if="submitResult">
-            <span class="icon-x">✕</span> {{ wrongCount }}
-          </span>
-          <span class="stat-correct" v-if="submitResult">
-            <span class="icon-check">✓</span> {{ correctCount }}
-          </span>
-          <span class="stat-answered" v-if="!submitResult && answeredCount > 0">
+          <span class="stat-answered" v-if="answeredCount > 0">
             <span class="icon-check">✓</span> {{ answeredCount }}
           </span>
         </div>
@@ -285,17 +294,6 @@ function restart() {
   color: #555;
 }
 
-.stat-wrong {
-  background: #fdecea;
-  color: #d93025;
-  border-radius: 20px;
-  padding: 2px 10px;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.stat-correct,
 .stat-answered {
   background: #e6f4ea;
   color: #1e8e3e;
@@ -376,13 +374,18 @@ function restart() {
   cursor: default;
 }
 
-/* Loading */
-.loading-state {
+/* Loading & Error */
+.loading-state,
+.error-state {
   align-items: center;
   justify-content: center;
   min-height: 300px;
   color: #555;
   gap: 16px;
+}
+
+.error-state {
+  color: #d93025;
 }
 
 .spinner {
@@ -396,14 +399,6 @@ function restart() {
 
 @keyframes spin {
   to { transform: rotate(360deg); }
-}
-
-.error-state {
-  align-items: center;
-  justify-content: center;
-  min-height: 300px;
-  color: #d93025;
-  gap: 12px;
 }
 
 .error-icon {

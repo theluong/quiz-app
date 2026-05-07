@@ -15,63 +15,101 @@ function getGrade(score) {
 </script>
 
 <template>
-  <div class="result-card">
-    <!-- Header -->
-    <div class="result-header">
-      <div class="result-icon">🎯</div>
-      <h2 class="result-title">Kết quả bài thi</h2>
-      <p class="result-subtitle">Kiểm tra từ vựng Du lịch &amp; Công tác</p>
-    </div>
+  <div class="result-wrapper">
+    <div class="result-card main-card">
+      <!-- Header -->
+      <div class="result-header">
+        <div class="result-icon">🎯</div>
+        <h2 class="result-title">Kết quả bài thi</h2>
+        <p class="result-subtitle">Hoàn thành xuất sắc</p>
+      </div>
 
-    <!-- Score Circle -->
-    <div class="score-circle">
-      <div class="score-number">{{ result.score }}<span class="score-pct">%</span></div>
-      <div class="score-grade" :style="{ color: getGrade(result.score).color }">
-        {{ getGrade(result.score).label }}
+      <!-- Score Circle -->
+      <div class="score-circle">
+        <div class="score-number">{{ result.score }}<span class="score-pct">%</span></div>
+        <div class="score-grade" :style="{ color: getGrade(result.score).color }">
+          {{ getGrade(result.score).label }}
+        </div>
+      </div>
+
+      <!-- Stats Row -->
+      <div class="stats-row">
+        <div class="stat-box stat-correct">
+          <div class="stat-num">{{ result.correct }}</div>
+          <div class="stat-lbl">✓ Câu đúng</div>
+        </div>
+        <div class="stat-box stat-wrong">
+          <div class="stat-num">{{ result.wrong }}</div>
+          <div class="stat-lbl">✕ Câu sai</div>
+        </div>
+        <div class="stat-box stat-total">
+          <div class="stat-num">{{ result.answered }}</div>
+          <div class="stat-lbl">📝 Đã làm</div>
+        </div>
+      </div>
+
+      <!-- Skipped notice -->
+      <p v-if="result.answered < total" class="skipped-notice">
+        ⚠️ Bạn đã bỏ qua {{ total - result.answered }} câu hỏi
+      </p>
+
+      <!-- Action Buttons -->
+      <div class="result-actions">
+        <button class="btn-restart" @click="emit('restart')">
+          🔄 Chọn bộ câu hỏi khác
+        </button>
       </div>
     </div>
 
-    <!-- Stats Row -->
-    <div class="stats-row">
-      <div class="stat-box stat-correct">
-        <div class="stat-num">{{ result.correct }}</div>
-        <div class="stat-lbl">✓ Câu đúng</div>
+    <!-- Review Section -->
+    <div v-if="result.results && result.results.length > 0" class="result-card review-card">
+      <h3 class="review-title">📋 Xem lại đáp án</h3>
+      <div class="review-list">
+        <div 
+          v-for="(ans, index) in result.results" 
+          :key="ans.id"
+          class="review-item"
+          :class="ans.correct ? 'is-correct' : 'is-wrong'"
+        >
+          <p class="review-question"><strong>Câu {{ index + 1 }}:</strong> {{ ans.question }}</p>
+          
+          <div class="review-answers">
+            <div class="answer-box user-answer" v-if="!ans.correct">
+              <span class="ans-label">Bạn chọn:</span>
+              <span class="ans-text">✕ {{ ans.userAnswer }}. {{ ans.userAnswerText || 'Bỏ trống' }}</span>
+            </div>
+            
+            <div class="answer-box correct-answer">
+              <span class="ans-label">Đáp án đúng:</span>
+              <span class="ans-text">✓ {{ ans.correctAnswer }}. {{ ans.correctAnswerText }}</span>
+            </div>
+          </div>
+        </div>
       </div>
-      <div class="stat-box stat-wrong">
-        <div class="stat-num">{{ result.wrong }}</div>
-        <div class="stat-lbl">✕ Câu sai</div>
-      </div>
-      <div class="stat-box stat-total">
-        <div class="stat-num">{{ result.answered }}</div>
-        <div class="stat-lbl">📝 Đã trả lời</div>
-      </div>
-    </div>
-
-    <!-- Skipped notice -->
-    <p v-if="result.answered < total" class="skipped-notice">
-      ⚠️ Bạn đã bỏ qua {{ total - result.answered }} câu hỏi
-    </p>
-
-    <!-- Action Buttons -->
-    <div class="result-actions">
-      <button class="btn-restart" @click="emit('restart')">
-        🔄 Làm lại
-      </button>
     </div>
   </div>
 </template>
 
 <style scoped>
+.result-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+  max-width: 800px;
+}
+
 .result-card {
   background: #fff;
   border-radius: 16px;
   box-shadow: 0 8px 40px rgba(0, 0, 0, 0.12);
-  width: 100%;
-  max-width: 700px;
   padding: 40px 36px;
   display: flex;
   flex-direction: column;
   align-items: center;
+}
+
+.main-card {
   gap: 28px;
 }
 
@@ -144,17 +182,9 @@ function getGrade(score) {
   text-align: center;
 }
 
-.stat-correct {
-  background: #e6f4ea;
-}
-
-.stat-wrong {
-  background: #fdecea;
-}
-
-.stat-total {
-  background: #e8f0fe;
-}
+.stat-correct { background: #e6f4ea; }
+.stat-wrong { background: #fdecea; }
+.stat-total { background: #e8f0fe; }
 
 .stat-num {
   font-size: 28px;
@@ -195,5 +225,80 @@ function getGrade(score) {
 .btn-restart:hover {
   background: #1557b0;
   transform: translateY(-1px);
+}
+
+/* Review Section */
+.review-card {
+  align-items: flex-start;
+  padding: 30px;
+}
+
+.review-title {
+  margin: 0 0 20px 0;
+  font-size: 20px;
+  color: #1a1a2e;
+}
+
+.review-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+}
+
+.review-item {
+  background: #f8f9fa;
+  border-left: 4px solid #ccc;
+  padding: 16px;
+  border-radius: 4px 8px 8px 4px;
+}
+
+.review-item.is-correct {
+  border-left-color: #34a853;
+}
+
+.review-item.is-wrong {
+  border-left-color: #ea4335;
+  background: #fff8f7;
+}
+
+.review-question {
+  margin: 0 0 12px 0;
+  font-size: 15px;
+  color: #333;
+  line-height: 1.5;
+}
+
+.review-answers {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.answer-box {
+  display: flex;
+  gap: 8px;
+  font-size: 14px;
+  padding: 8px 12px;
+  border-radius: 6px;
+}
+
+.user-answer {
+  background: #fdecea;
+  color: #d93025;
+}
+
+.correct-answer {
+  background: #e6f4ea;
+  color: #1e8e3e;
+}
+
+.ans-label {
+  font-weight: 600;
+  min-width: 90px;
+}
+
+.ans-text {
+  flex: 1;
 }
 </style>
