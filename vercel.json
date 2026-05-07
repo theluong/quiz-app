@@ -15,7 +15,19 @@
   ],
   "routes": [
     {
-      "src": "/api/(.*)",
+      "src": "/api/categories",
+      "dest": "backend/index.js"
+    },
+    {
+      "src": "/api/questions",
+      "dest": "backend/index.js"
+    },
+    {
+      "src": "/api/submit",
+      "dest": "backend/index.js"
+    },
+    {
+      "src": "/api/test",
       "dest": "backend/index.js"
     },
     {
