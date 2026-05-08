@@ -3,12 +3,12 @@ const express = require("express");
 const cors = require("cors");
 const { createClient } = require('@supabase/supabase-js');
 
+const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
+
 const PORT = process.env.VERCEL ? 3000 : (process.env.PORT || 5000);
 const app = express();
 app.use(cors());
 app.use(express.json());
-
-const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
 
 function shuffleArray(array) {
   const arr = [...array];
@@ -117,6 +117,10 @@ app.post("/api/submit", async (req, res) => {
 // GET /api/test
 app.get("/api/test", (req, res) => {
   res.json({ message: "Backend running OK with Supabase" });
+});
+
+app.listen(PORT, () => {
+  console.log(`Server running on http://localhost:${PORT}`);
 });
 
 module.exports = app;
