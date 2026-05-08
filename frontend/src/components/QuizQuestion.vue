@@ -4,6 +4,7 @@ import { ref } from 'vue'
 const props = defineProps({
   question: { type: Object, required: true },
   selectedAnswer: { type: String, default: null },
+  questionNumber: { type: Number, required: true },
 })
 
 const emit = defineEmits(['select'])
@@ -21,7 +22,7 @@ function selectOption(label) {
   <div class="question-section" v-if="question">
     <!-- Question Text -->
     <div class="question-text">
-      <span class="question-num">{{ question.id }}.</span>
+      <span class="question-num">{{ questionNumber }}.</span>
       {{ question.question }}
     </div>
 

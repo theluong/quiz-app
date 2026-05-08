@@ -154,6 +154,7 @@ function restartAndChooseNew() {
       <!-- Question -->
       <QuizQuestion
         :question="currentQuestion"
+        :question-number="currentNumber"
         :selected-answer="answers[currentQuestion?.id]"
         @select="(opt) => selectAnswer(currentQuestion.id, opt)"
       />
