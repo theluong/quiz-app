@@ -5,6 +5,7 @@ import QuizQuestion from './QuizQuestion.vue'
 import QuizResult from './QuizResult.vue'
 
 const selectedCategory = ref(null)
+const questionCount = ref(30)
 
 const questions = ref([])
 const currentIndex = ref(0)
@@ -14,15 +15,25 @@ const submitResult = ref(null)
 const loading = ref(false)
 const error = ref(null)
 
-async function startQuiz(categoryId) {
+async function startQuiz(payload) {
+  const { categoryId, count } = payload
+  questionCount.value = count
   selectedCategory.value = categoryId
   loading.value = true
   error.value = null
   
   try {
-    const res = await fetch(`/api/questions?category=${categoryId}`)
+    const res = await fetch(`/api/questions?category=${categoryId}&limit=${count}`)
     const data = await res.json()
-    questions.value = data.questions || []
+    let allQuestions = data.questions || []
+    
+    if (allQuestions.length > count) {
+      allQuestions = allQuestions.slice(0, count)
+    } else if (allQuestions.length < count && allQuestions.length > 0) {
+      questionCount.value = allQuestions.length
+    }
+    
+    questions.value = allQuestions
     if(questions.value.length === 0) {
       error.value = 'Chưa có câu hỏi nào trong chủ đề này.'
     }

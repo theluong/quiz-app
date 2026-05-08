@@ -26,10 +26,12 @@ app.get("/api/categories", async (req, res) => {
   res.json({ categories: data });
 });
 
-// GET /api/questions?category=UUID
+// GET /api/questions?category=UUID&limit=20|30|50
 app.get("/api/questions", async (req, res) => {
-  const { category } = req.query;
+  const { category, limit } = req.query;
   if (!category) return res.status(400).json({ error: "Missing category parameter" });
+
+  const questionLimit = parseInt(limit) || 30;
 
   const { data, error } = await supabase
     .from('questions')
@@ -38,13 +40,11 @@ app.get("/api/questions", async (req, res) => {
 
   if (error) return res.status(500).json({ error: error.message });
 
-  // Fetch 30 random questions to avoid overloading the Frontend UI
-  const limit = 30;
-  let randomQuestions = shuffleArray(data || []).slice(0, limit);
+  const randomQuestions = shuffleArray(data || []).slice(0, questionLimit);
 
-  // Phase 1->2: Return questions, hide correct answer
-  const formattedQuestions = randomQuestions.map(q => ({
+  const formattedQuestions = randomQuestions.map((q, index) => ({
     id: q.id,
+    order: index + 1,
     question: q.question_text,
     options: {
       A: q.option_a,

@@ -12,8 +12,10 @@ function shuffleArray(array) {
 }
 
 module.exports = async (req, res) => {
-  const { category } = req.query;
+  const { category, limit } = req.query;
   if (!category) return res.status(400).json({ error: "Missing category parameter" });
+
+  const questionLimit = parseInt(limit) || 30;
 
   const { data, error } = await supabase
     .from('questions')
@@ -22,11 +24,11 @@ module.exports = async (req, res) => {
 
   if (error) return res.status(500).json({ error: error.message });
 
-  const limit = 30;
-  const randomQuestions = shuffleArray(data || []).slice(0, limit);
+  const randomQuestions = shuffleArray(data || []).slice(0, questionLimit);
 
-  const formattedQuestions = randomQuestions.map(q => ({
+  const formattedQuestions = randomQuestions.map((q, index) => ({
     id: q.id,
+    order: index + 1,
     question: q.question_text,
     options: { A: q.option_a, B: q.option_b, C: q.option_c, D: q.option_d },
     hint: q.hint

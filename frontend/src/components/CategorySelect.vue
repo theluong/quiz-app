@@ -6,6 +6,13 @@ const emit = defineEmits(['select'])
 const categories = ref([])
 const loading = ref(true)
 const error = ref(null)
+const selectedCategory = ref(null)
+
+const questionCounts = [
+  { value: 20, label: '20 câu' },
+  { value: 30, label: '30 câu' },
+  { value: 50, label: '50 câu' },
+]
 
 onMounted(async () => {
   try {
@@ -20,7 +27,15 @@ onMounted(async () => {
 })
 
 function selectCategory(id) {
-  emit('select', id)
+  selectedCategory.value = categories.value.find(c => c.id === id)
+}
+
+function selectCount(count) {
+  emit('select', { categoryId: selectedCategory.value.id, count })
+}
+
+function goBack() {
+  selectedCategory.value = null
 }
 </script>
 
@@ -44,7 +59,7 @@ function selectCategory(id) {
     </div>
 
     <!-- State: Success -->
-    <div v-else class="grid-container">
+    <div v-else-if="!selectedCategory" class="grid-container">
       <button 
         v-for="cat in categories" 
         :key="cat.id" 
@@ -54,6 +69,26 @@ function selectCategory(id) {
         <h3 class="cat-name">{{ cat.name }}</h3>
         <p class="cat-desc">{{ cat.description }}</p>
       </button>
+    </div>
+
+    <!-- Step 2: Select question count -->
+    <div v-else class="count-section">
+      <button class="btn-back" @click="goBack">← Quay lại</button>
+      <div class="count-header">
+        <h2>{{ selectedCategory.name }}</h2>
+        <p>Chọn số lượng câu hỏi</p>
+      </div>
+      <div class="count-options">
+        <button
+          v-for="opt in questionCounts"
+          :key="opt.value"
+          class="count-card"
+          @click="selectCount(opt.value)"
+        >
+          <span class="count-num">{{ opt.value }}</span>
+          <span class="count-label">{{ opt.label }}</span>
+        </button>
+      </div>
     </div>
   </div>
 </template>
@@ -120,6 +155,75 @@ function selectCategory(id) {
   color: #555;
   margin: 0;
   line-height: 1.5;
+}
+
+/* Count Selection */
+.count-section {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.btn-back {
+  background: none;
+  border: none;
+  color: #1a73e8;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 8px 0;
+  align-self: flex-start;
+}
+
+.count-header {
+  text-align: center;
+}
+
+.count-header h2 {
+  font-size: 24px;
+  font-weight: 700;
+  color: #1a1a2e;
+  margin-bottom: 8px;
+}
+
+.count-header p {
+  color: #666;
+}
+
+.count-options {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.count-card {
+  background: #fff;
+  border: 2px solid #e0e6ed;
+  border-radius: 16px;
+  padding: 28px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.count-card:hover {
+  border-color: #1a73e8;
+  background: #f0f4ff;
+  transform: translateY(-2px);
+}
+
+.count-num {
+  font-size: 36px;
+  font-weight: 800;
+  color: #1a73e8;
+}
+
+.count-label {
+  font-size: 14px;
+  color: #555;
 }
 
 /* State Boxes */
