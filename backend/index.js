@@ -119,8 +119,10 @@ app.get("/api/test", (req, res) => {
   res.json({ message: "Backend running OK with Supabase" });
 });
 
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
-});
+if (!process.env.VERCEL) {
+  app.listen(PORT, () => {
+    console.log(`Server running on http://localhost:${PORT}`);
+  });
+}
 
 module.exports = app;

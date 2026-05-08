@@ -1,7 +1,7 @@
 {
   "builds": [
     {
-      "src": "api/**/*.js",
+      "src": "backend/index.js",
       "use": "@vercel/node"
     },
     {
@@ -16,14 +16,14 @@
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "/api/$1"
+      "dest": "/backend/index.js"
     },
     {
       "handle": "filesystem"
     },
     {
       "src": "/(.*)",
-      "dest": "frontend/dist/index.html"
+      "dest": "/frontend/dist/index.html"
     }
   ]
 }
