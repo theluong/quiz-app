@@ -1,7 +1,8 @@
 <script setup>
-defineProps({
+const props = defineProps({
   result: { type: Object, required: true },
   total: { type: Number, required: true },
+  timeSpent: { type: Number, default: 0 },
 })
 
 const emit = defineEmits(['restart'])
@@ -11,6 +12,12 @@ function getGrade(score) {
   if (score >= 70) return { label: 'Tốt! 👍', color: '#1a73e8' }
   if (score >= 50) return { label: 'Trung bình 📚', color: '#f9a825' }
   return { label: 'Cần cố gắng hơn 💪', color: '#d93025' }
+}
+
+function formatTime(seconds) {
+  const mins = Math.floor(seconds / 60)
+  const secs = seconds % 60
+  return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
 }
 </script>
 
@@ -41,6 +48,10 @@ function getGrade(score) {
         <div class="stat-box stat-wrong">
           <div class="stat-num">{{ result.wrong }}</div>
           <div class="stat-lbl">✕ Câu sai</div>
+        </div>
+        <div class="stat-box stat-time">
+          <div class="stat-num">{{ formatTime(timeSpent) }}</div>
+          <div class="stat-lbl">⏱️ Thời gian</div>
         </div>
         <div class="stat-box stat-total">
           <div class="stat-num">{{ result.answered }}</div>
@@ -184,6 +195,7 @@ function getGrade(score) {
 
 .stat-correct { background: #e6f4ea; }
 .stat-wrong { background: #fdecea; }
+.stat-time { background: #fff3e0; }
 .stat-total { background: #e8f0fe; }
 
 .stat-num {

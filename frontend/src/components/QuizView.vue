@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import CategorySelect from './CategorySelect.vue'
 import QuizQuestion from './QuizQuestion.vue'
 import QuizResult from './QuizResult.vue'
@@ -14,6 +14,32 @@ const submitted = ref(false)
 const submitResult = ref(null)
 const loading = ref(false)
 const error = ref(null)
+
+const startTime = ref(null)
+const elapsedSeconds = ref(0)
+let timerInterval = null
+
+function startTimer() {
+  startTime.value = Date.now()
+  elapsedSeconds.value = 0
+  timerInterval = setInterval(() => {
+    elapsedSeconds.value = Math.floor((Date.now() - startTime.value) / 1000)
+  }, 1000)
+}
+
+function stopTimer() {
+  if (timerInterval) {
+    clearInterval(timerInterval)
+    timerInterval = null
+  }
+  return elapsedSeconds.value
+}
+
+function formatTime(seconds) {
+  const mins = Math.floor(seconds / 60)
+  const secs = seconds % 60
+  return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
+}
 
 async function startQuiz(payload) {
   const { categoryId, count } = payload
@@ -41,6 +67,7 @@ async function startQuiz(payload) {
     error.value = 'Không thể tải câu hỏi. Vui lòng thử lại.'
   } finally {
     loading.value = false
+    startTimer()
   }
 }
 
@@ -73,8 +100,10 @@ function next() {
 }
 
 async function submitQuiz() {
+  stopTimer()
+  const timeSpent = elapsedSeconds.value
   const answersArray = Object.entries(answers.value).map(([id, selected]) => ({
-    id, // UUID string
+    id,
     selected,
   }))
   try {
@@ -83,7 +112,9 @@ async function submitQuiz() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ answers: answersArray }),
     })
-    submitResult.value = await res.json()
+    const result = await res.json()
+    result.timeSpent = timeSpent
+    submitResult.value = result
     submitted.value = true
   } catch (e) {
     alert('Lỗi khi nộp bài. Vui lòng thử lại.')
@@ -91,13 +122,19 @@ async function submitQuiz() {
 }
 
 function restartAndChooseNew() {
+  stopTimer()
   selectedCategory.value = null
   questions.value = []
   currentIndex.value = 0
   answers.value = {}
   submitted.value = false
   submitResult.value = null
+  elapsedSeconds.value = 0
 }
+
+onUnmounted(() => {
+  stopTimer()
+})
 </script>
 
 <template>
@@ -126,6 +163,7 @@ function restartAndChooseNew() {
       v-else-if="submitted"
       :result="submitResult"
       :total="total"
+      :time-spent="elapsedSeconds"
       @restart="restartAndChooseNew"
     />
 
@@ -136,6 +174,10 @@ function restartAndChooseNew() {
         <div class="quiz-title">
           <span class="quiz-icon">📝</span>
           <span>Kiểm tra kiến thức</span>
+        </div>
+        <div class="timer-display">
+          <span class="timer-icon">⏱️</span>
+          <span class="timer-value">{{ formatTime(elapsedSeconds) }}</span>
         </div>
         <button class="btn-close" @click="restartAndChooseNew" title="Thoát">✕</button>
       </div>
@@ -242,6 +284,22 @@ function restartAndChooseNew() {
 
 .quiz-icon {
   font-size: 20px;
+}
+
+.timer-display {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #f0f4ff;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-weight: 700;
+  font-size: 16px;
+  color: #1a73e8;
+}
+
+.timer-icon {
+  font-size: 16px;
 }
 
 .btn-close {
