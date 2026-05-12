@@ -31,7 +31,7 @@ function selectCategory(id) {
 }
 
 function selectCount(count) {
-  emit('select', { categoryId: selectedCategory.value.id, count })
+  emit('select', { categoryId: selectedCategory.value.id, categoryName: selectedCategory.value.name, count })
 }
 
 function goBack() {

@@ -5,6 +5,7 @@ import QuizQuestion from './QuizQuestion.vue'
 import QuizResult from './QuizResult.vue'
 
 const selectedCategory = ref(null)
+const selectedCategoryName = ref('')
 const questionCount = ref(30)
 
 const questions = ref([])
@@ -42,9 +43,10 @@ function formatTime(seconds) {
 }
 
 async function startQuiz(payload) {
-  const { categoryId, count } = payload
+  const { categoryId, categoryName, count } = payload
   questionCount.value = count
   selectedCategory.value = categoryId
+  selectedCategoryName.value = categoryName || ''
   loading.value = true
   error.value = null
   
@@ -102,18 +104,27 @@ function next() {
 async function submitQuiz() {
   stopTimer()
   const timeSpent = elapsedSeconds.value
-  const answersArray = Object.entries(answers.value).map(([id, selected]) => ({
-    id,
-    selected,
-  }))
+  
+  const answeredArray = questions.value
+    .filter(q => answers.value[q.id] !== undefined)
+    .map(q => ({ id: q.id, selected: answers.value[q.id] }))
+  
+  const allQuestionIds = questions.value.map(q => q.id)
+  
   try {
     const res = await fetch('/api/submit', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ answers: answersArray }),
+      body: JSON.stringify({ 
+        answers: answeredArray, 
+        allQuestionIds,
+        totalQuestions: total.value 
+      }),
     })
     const result = await res.json()
     result.timeSpent = timeSpent
+    result.categoryName = selectedCategoryName.value
+    result.questionPackage = questionCount.value
     submitResult.value = result
     submitted.value = true
   } catch (e) {

@@ -28,7 +28,7 @@ function formatTime(seconds) {
       <div class="result-header">
         <div class="result-icon">🎯</div>
         <h2 class="result-title">Kết quả bài thi</h2>
-        <p class="result-subtitle">Hoàn thành xuất sắc</p>
+        <p class="result-subtitle">{{ result.categoryName || 'Không xác định' }} · {{ result.questionPackage || total }} câu</p>
       </div>
 
       <!-- Score Circle -->
@@ -60,8 +60,8 @@ function formatTime(seconds) {
       </div>
 
       <!-- Skipped notice -->
-      <p v-if="result.answered < total" class="skipped-notice">
-        ⚠️ Bạn đã bỏ qua {{ total - result.answered }} câu hỏi
+      <p v-if="(result.skipped || 0) > 0" class="skipped-notice">
+        ⚠️ {{ result.skipped }} câu bỏ qua (tính là sai)
       </p>
 
       <!-- Action Buttons -->
@@ -77,17 +77,21 @@ function formatTime(seconds) {
       <h3 class="review-title">📋 Xem lại đáp án</h3>
       <div class="review-list">
         <div 
-          v-for="(ans, index) in result.results" 
+          v-for="ans in result.results" 
           :key="ans.id"
           class="review-item"
-          :class="ans.correct ? 'is-correct' : 'is-wrong'"
+          :class="ans.skipped ? 'is-skipped' : (ans.correct ? 'is-correct' : 'is-wrong')"
         >
-          <p class="review-question"><strong>Câu {{ index + 1 }}:</strong> {{ ans.question }}</p>
+          <p class="review-question">
+            <strong>Câu {{ ans.order }}:</strong> 
+            <span v-if="ans.skipped" class="skipped-label">[Đã bỏ qua]</span>
+            <span>{{ ans.question }}</span>
+          </p>
           
-          <div class="review-answers">
+          <div v-if="!ans.skipped" class="review-answers">
             <div class="answer-box user-answer" v-if="!ans.correct">
               <span class="ans-label">Bạn chọn:</span>
-              <span class="ans-text">✕ {{ ans.userAnswer }}. {{ ans.userAnswerText || 'Bỏ trống' }}</span>
+              <span class="ans-text">{{ ans.correct ? '✓' : '✕' }} {{ ans.userAnswer }}. {{ ans.userAnswerText || 'Bỏ trống' }}</span>
             </div>
             
             <div class="answer-box correct-answer">
@@ -274,11 +278,22 @@ function formatTime(seconds) {
   background: #fff8f7;
 }
 
+.review-item.is-skipped {
+  border-left-color: #f9a825;
+  background: #fffbf0;
+}
+
 .review-question {
   margin: 0 0 12px 0;
   font-size: 15px;
   color: #333;
   line-height: 1.5;
+}
+
+.skipped-label {
+  color: #f9a825;
+  font-weight: 600;
+  font-style: italic;
 }
 
 .review-answers {
