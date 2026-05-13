@@ -106,17 +106,23 @@ function formatTime(seconds) {
 
 <template>
   <div class="category-wrapper">
-    <!-- Header with Leaderboard Button -->
+    <!-- Header -->
     <div class="header-section">
       <h1>👋 Kiểm Tra Kiến Thức</h1>
       <p>Bắt đầu thử thách bản thân với các bài trắc nghiệm</p>
-      <button v-if="!showLeaderboard && !showNameInput && !selectedCategory" class="btn-leaderboard" @click="viewLeaderboard">
+      <button v-if="!showLeaderboard" class="btn-leaderboard" @click="viewLeaderboard">
         🏆 Bảng Xếp Hạng
       </button>
     </div>
 
+    <!-- Loading Categories -->
+    <div v-if="loading" class="loading-container">
+      <div class="spinner"></div>
+      <p>Đang tải danh mục...</p>
+    </div>
+
     <!-- Leaderboard View -->
-    <div v-if="showLeaderboard" class="leaderboard-section">
+    <div v-else-if="showLeaderboard" class="leaderboard-section">
       <button class="btn-back" @click="viewLeaderboard">← Quay lại</button>
       <div class="leaderboard-card">
         <h2 class="leaderboard-title">🏆 Bảng Xếp Hạng</h2>
@@ -167,7 +173,6 @@ function formatTime(seconds) {
           class="name-input" 
           placeholder="Nhập tên của bạn..."
           maxlength="50"
-          @keyup.enter="selectCount(30)"
         />
         <p class="name-hint">Chọn số câu hỏi để bắt đầu</p>
         <div class="count-options">
@@ -185,7 +190,10 @@ function formatTime(seconds) {
     </div>
 
     <!-- Category Selection -->
-    <div v-else-if="!selectedCategory" class="grid-container">
+    <div v-else class="grid-container">
+      <div v-if="categories.length === 0" class="empty-state">
+        <p>Chưa có danh mục nào</p>
+      </div>
       <button 
         v-for="cat in categories" 
         :key="cat.id" 
@@ -247,6 +255,13 @@ function formatTime(seconds) {
   gap: 20px;
 }
 
+.empty-state {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 60px;
+  color: #888;
+}
+
 .category-card {
   background: #ffffff;
   border: 1px solid #e0e6ed;
@@ -281,11 +296,40 @@ function formatTime(seconds) {
   line-height: 1.5;
 }
 
+/* Loading */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  gap: 16px;
+  color: #555;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.1);
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.loading-container .spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #e0e0e0;
+  border-top-color: #1a73e8;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
 /* Name Input Section */
 .name-section {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 20px;
 }
 
 .name-card {
@@ -293,40 +337,39 @@ function formatTime(seconds) {
   border-radius: 16px;
   padding: 32px;
   box-shadow: 0 8px 40px rgba(0,0,0,0.1);
+  max-width: 500px;
+  margin: 0 auto;
+  width: 100%;
   text-align: center;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
 }
 
 .name-card h2 {
-  font-size: 24px;
-  font-weight: 700;
-  color: #1a73e8;
-  margin: 0;
+  margin: 0 0 8px;
+  color: #1a1a2e;
 }
 
 .name-card p {
-  color: #666;
-  margin: 0;
+  color: #555;
+  margin: 0 0 20px;
 }
 
 .name-input {
   width: 100%;
-  padding: 14px 20px;
+  padding: 14px 16px;
   border: 2px solid #e0e6ed;
   border-radius: 12px;
   font-size: 16px;
-  text-align: center;
+  outline: none;
   transition: border-color 0.2s;
+  box-sizing: border-box;
 }
 
 .name-input:focus {
-  outline: none;
   border-color: #1a73e8;
 }
 
 .name-hint {
+  margin: 20px 0 12px !important;
   font-size: 14px;
   color: #888;
 }
@@ -418,6 +461,7 @@ function formatTime(seconds) {
   gap: 12px;
   padding-right: 8px;
   min-height: 0;
+  max-height: 500px;
 }
 
 .leaderboard-list::-webkit-scrollbar {

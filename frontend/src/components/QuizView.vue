@@ -15,7 +15,9 @@ const answers = ref({})
 const submitted = ref(false)
 const submitResult = ref(null)
 const loading = ref(false)
+const submitLoading = ref(false)
 const error = ref(null)
+const isSubmitting = ref(false)
 
 const startTime = ref(null)
 const elapsedSeconds = ref(0)
@@ -104,7 +106,10 @@ function next() {
 }
 
 async function submitQuiz() {
+  if (isSubmitting.value) return
+  isSubmitting.value = true
   stopTimer()
+  submitLoading.value = true
   const timeSpent = elapsedSeconds.value
   
   const answeredArray = questions.value
@@ -135,6 +140,9 @@ async function submitQuiz() {
     submitted.value = true
   } catch (e) {
     alert('Lỗi khi nộp bài. Vui lòng thử lại.')
+  } finally {
+    submitLoading.value = false
+    isSubmitting.value = false
   }
 }
 
@@ -147,6 +155,9 @@ function restartAndChooseNew() {
   submitted.value = false
   submitResult.value = null
   elapsedSeconds.value = 0
+  isSubmitting.value = false
+  loading.value = false
+  submitLoading.value = false
 }
 
 onUnmounted(() => {
@@ -166,6 +177,12 @@ onUnmounted(() => {
     <div v-else-if="loading" class="quiz-card loading-state">
       <div class="spinner"></div>
       <p>Đang tải câu hỏi...</p>
+    </div>
+
+    <!-- Submit Loading state -->
+    <div v-else-if="submitLoading" class="quiz-card loading-state">
+      <div class="spinner"></div>
+      <p>Đang xử lý kết quả...</p>
     </div>
 
     <!-- Error state -->
@@ -251,10 +268,16 @@ onUnmounted(() => {
           v-else
           class="btn-submit"
           @click="submitQuiz"
-          :disabled="answeredCount === 0"
+          :disabled="answeredCount === 0 || isSubmitting"
         >
-          Nộp bài
+          {{ isSubmitting ? 'Đang nộp...' : 'Nộp bài' }}
         </button>
+      </div>
+
+      <!-- Loading Overlay -->
+      <div v-if="isSubmitting" class="submit-loading">
+        <div class="spinner"></div>
+        <p>Đang xử lý kết quả...</p>
       </div>
     </div>
   </div>
@@ -280,6 +303,7 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   gap: 20px;
+  position: relative;
 }
 
 /* Header */
@@ -459,6 +483,33 @@ onUnmounted(() => {
 .btn-submit:disabled {
   background: #b0bec5;
   cursor: default;
+}
+
+.btn-submit:disabled:hover {
+  transform: none;
+}
+
+/* Submit Loading Overlay */
+.submit-loading {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.95);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  border-radius: 16px;
+  z-index: 10;
+}
+
+.submit-loading p {
+  color: #555;
+  font-size: 16px;
+  font-weight: 500;
 }
 
 /* Loading & Error */
