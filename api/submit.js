@@ -7,7 +7,7 @@ module.exports = async (req, res) => {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  const { answers, allQuestionIds, totalQuestions } = req.body;
+  const { answers, allQuestionIds, totalQuestions, playerName, categoryName, timeSpent } = req.body;
   if (!answers || !Array.isArray(answers)) {
     return res.status(400).json({ error: "Invalid answers format" });
   }
@@ -83,13 +83,31 @@ module.exports = async (req, res) => {
     };
   });
 
+  const finalScore = total ? Math.round((finalCorrectCount / total) * 100) : 0;
+
+  if (playerName) {
+    const { error: insertError } = await supabase.from('quiz_results').insert({
+      player_name: playerName,
+      category_name: categoryName || '',
+      total_questions: total,
+      correct_count: finalCorrectCount,
+      wrong_count: finalWrongCount,
+      skipped_count: skippedCount,
+      score: finalScore,
+      time_spent: timeSpent || 0
+    });
+    if (insertError) {
+      console.error('Error saving result:', insertError);
+    }
+  }
+
   res.json({
     total,
     answered: answeredCount,
     correct: finalCorrectCount,
     wrong: finalWrongCount,
     skipped: skippedCount,
-    score: total ? Math.round((finalCorrectCount / total) * 100) : 0,
+    score: finalScore,
     results: [...results, ...skippedResults],
   });
 };

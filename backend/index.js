@@ -60,7 +60,7 @@ app.get("/api/questions", async (req, res) => {
 
 // POST /api/submit
 app.post("/api/submit", async (req, res) => {
-  const { answers, allQuestionIds, totalQuestions } = req.body;
+  const { answers, allQuestionIds, totalQuestions, playerName, categoryName, timeSpent } = req.body;
   if (!answers || !Array.isArray(answers)) {
     return res.status(400).json({ error: "Invalid answers format" });
   }
@@ -136,15 +136,47 @@ app.post("/api/submit", async (req, res) => {
     };
   });
 
+  const finalScore = total ? Math.round((finalCorrectCount / total) * 100) : 0;
+
+  if (playerName) {
+    const { error: insertError } = await supabase.from('quiz_results').insert({
+      player_name: playerName,
+      category_name: categoryName || '',
+      total_questions: total,
+      correct_count: finalCorrectCount,
+      wrong_count: finalWrongCount,
+      skipped_count: skippedCount,
+      score: finalScore,
+      time_spent: timeSpent || 0
+    });
+    if (insertError) {
+      console.error('Error saving result:', insertError);
+    }
+  }
+
   res.json({
     total,
     answered: answeredCount,
     correct: finalCorrectCount,
     wrong: finalWrongCount,
     skipped: skippedCount,
-    score: total ? Math.round((finalCorrectCount / total) * 100) : 0,
+    score: finalScore,
     results: [...results, ...skippedResults],
   });
+});
+
+// GET /api/leaderboard
+app.get("/api/leaderboard", async (req, res) => {
+  const { data, error } = await supabase
+    .from('quiz_results')
+    .select('*')
+    .order('score', { ascending: false })
+    .order('time_spent', { ascending: true })
+    .order('correct_count', { ascending: false })
+    .limit(20);
+
+  if (error) return res.status(500).json({ error: error.message });
+  res.json({ results: data || [] });
 });
 
 // GET /api/test

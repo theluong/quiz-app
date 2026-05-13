@@ -7,6 +7,7 @@ import QuizResult from './QuizResult.vue'
 const selectedCategory = ref(null)
 const selectedCategoryName = ref('')
 const questionCount = ref(30)
+const playerName = ref('')
 
 const questions = ref([])
 const currentIndex = ref(0)
@@ -43,10 +44,11 @@ function formatTime(seconds) {
 }
 
 async function startQuiz(payload) {
-  const { categoryId, categoryName, count } = payload
+  const { categoryId, categoryName, count, playerName: name } = payload
   questionCount.value = count
   selectedCategory.value = categoryId
   selectedCategoryName.value = categoryName || ''
+  playerName.value = name || ''
   loading.value = true
   error.value = null
   
@@ -118,13 +120,17 @@ async function submitQuiz() {
       body: JSON.stringify({ 
         answers: answeredArray, 
         allQuestionIds,
-        totalQuestions: total.value 
+        totalQuestions: total.value,
+        playerName: playerName.value,
+        categoryName: selectedCategoryName.value,
+        timeSpent
       }),
     })
     const result = await res.json()
     result.timeSpent = timeSpent
     result.categoryName = selectedCategoryName.value
     result.questionPackage = questionCount.value
+    result.playerName = playerName.value
     submitResult.value = result
     submitted.value = true
   } catch (e) {

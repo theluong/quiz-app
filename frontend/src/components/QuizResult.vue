@@ -29,6 +29,7 @@ function formatTime(seconds) {
         <div class="result-icon">🎯</div>
         <h2 class="result-title">Kết quả bài thi</h2>
         <p class="result-subtitle">{{ result.categoryName || 'Không xác định' }} · {{ result.questionPackage || total }} câu</p>
+        <p class="player-name-display">{{ result.playerName || '' }}</p>
       </div>
 
       <!-- Score Circle -->
@@ -67,7 +68,7 @@ function formatTime(seconds) {
       <!-- Action Buttons -->
       <div class="result-actions">
         <button class="btn-restart" @click="emit('restart')">
-          🔄 Chọn bộ câu hỏi khác
+          🏠 Trang chủ
         </button>
       </div>
     </div>
@@ -148,6 +149,13 @@ function formatTime(seconds) {
   color: #777;
   font-size: 14px;
   margin: 0;
+}
+
+.player-name-display {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1a73e8;
+  margin: 8px 0 0;
 }
 
 /* Score Circle */

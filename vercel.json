@@ -15,6 +15,10 @@
       "destination": "/api/submit.js"
     },
     {
+      "source": "/api/leaderboard",
+      "destination": "/api/leaderboard.js"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
