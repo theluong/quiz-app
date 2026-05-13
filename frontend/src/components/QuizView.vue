@@ -105,6 +105,10 @@ function next() {
   }
 }
 
+function goToQuestion(index) {
+  currentIndex.value = index
+}
+
 async function submitQuiz() {
   if (isSubmitting.value) return
   isSubmitting.value = true
@@ -219,7 +223,7 @@ onUnmounted(() => {
       <!-- Progress Bar -->
       <div class="progress-section">
         <div class="progress-bar">
-          <div
+          <button
             v-for="(q, i) in questions"
             :key="q.id"
             class="progress-dash"
@@ -228,7 +232,9 @@ onUnmounted(() => {
               'current': i === currentIndex,
               'answered': answers[q.id] !== undefined && i !== currentIndex,
             }"
-          ></div>
+            @click="goToQuestion(i)"
+            :title="`Câu ${i + 1}`"
+          ></button>
         </div>
         <div class="progress-stats">
           <span class="stat-current">{{ currentNumber }}/{{ total }}</span>
@@ -378,13 +384,23 @@ onUnmounted(() => {
   flex: 1;
   height: 5px;
   border-radius: 3px;
-  background: #e0e0e0;
+  background: #bdbdbd;
   transition: background 0.3s;
+  border: none;
+  padding: 0;
+  cursor: pointer;
 }
 
-.progress-dash.active,
+.progress-dash:hover {
+  background: #9e9e9e;
+}
+
+.progress-dash.active {
+  background: #bdbdbd;
+}
+
 .progress-dash.answered {
-  background: #1a73e8;
+  background: #34a853;
 }
 
 .progress-dash.current {
